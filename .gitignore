@@ -1,0 +1,9 @@
+!.gitignore
+
+/openldap/
+/postgres/
+/gerrit/
+/jenkins/
+/ldappasswd/
+/sonarqube/
+

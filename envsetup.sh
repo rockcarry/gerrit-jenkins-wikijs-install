@@ -1,0 +1,7 @@
+#!/bin/sh
+
+export OPENLDAP_SERVER=172.30.18.94
+export POSTGRE_SERVER=172.30.18.94
+export GERRIT_SERVER=172.30.18.94
+export ADMIN_PASSWD=2bjgzoukrock
+
