@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DOCKER_IMAGE_NAME="apical/jenkins:v1.0.1"
+DOCKER_IMAGE_NAME="apical/jenkins:v1.0.2"
 
 function docker_create()
 {
@@ -12,7 +12,7 @@ function docker_create()
     rm -rf $PWD/docker_temp
     mkdir $PWD/docker_temp
     cp $PWD/files/jenkins-2.462.2.war $PWD/docker_temp
-    cp $PWD/files/start.sh            $PWD/docker_temp
+    cp $PWD/files/jenkins.sh          $PWD/docker_temp
     cd $PWD/docker_temp
 
     echo "FROM ubuntu:20.04"                    > Dockerfile
@@ -22,30 +22,20 @@ function docker_create()
     echo "RUN ln -snf /usr/share/zoneinfo/\$TZ /etc/localtime && echo \$TZ > /etc/timezone" >> Dockerfile
     echo "RUN apt-get update" >> Dockerfile
     echo "RUN apt-get install -y curl wget openjdk-17-jre-headless net-tools" >> Dockerfile
-    echo "COPY jenkins-2.462.2.war /"             >> Dockerfile
-    echo "COPY start.sh /usr/local/bin"           >> Dockerfile
     echo "RUN apt-get install -y libc6-dev-i386 libncurses5-dev liblz4-tool vim git python build-essential libtool pkg-config autoconf automake bison flex bc mtd-utils squashfs-tools tclsh" >> Dockerfile
     echo "RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*" >> Dockerfile
-    echo "CMD [\"/usr/local/bin/start.sh\"]" >> Dockerfile
+    echo "COPY jenkins-2.462.2.war /"             >> Dockerfile
+    echo "COPY jenkins.sh /usr/local/bin"         >> Dockerfile
+    echo "RUN groupadd -g 1000 jenkins"           >> Dockerfile
+    echo "RUN useradd -u 1000 -g 1000 jenkins"    >> Dockerfile
+    echo "RUN mkdir -p /home/jenkins"             >> Dockerfile
+    echo "RUN chown jenkins:jenkins /home/jenkins">> Dockerfile
+    echo "USER jenkins"                           >> Dockerfile
+    echo "CMD [\"/usr/local/bin/jenkins.sh\"]"    >> Dockerfile
 
     docker build -t $DOCKER_IMAGE_NAME .
     cd -
     rm -rf $PWD/docker_temp
-}
-
-function docker_run()
-{
-    if [ "$1"x != "root"x ]; then
-        docker run -it --rm -u $(id -u):$(id -g) -w `pwd` -p 8080:8080 \
-            -v /home:/home \
-            -v /etc/passwd:/etc/passwd:ro \
-            -v /etc/group:/etc/group:ro   \
-            -v /etc/shadow:/etc/shadow:ro \
-            -v /etc/localtime:/etc/localtime:ro \
-            $DOCKER_IMAGE_NAME
-    else
-        docker run -it --rm -p 8080:8080 $DOCKER_IMAGE_NAME
-    fi
 }
 
 case "$1" in
@@ -59,3 +49,4 @@ debug)
     docker run -d  --rm -p 8003:8080 $DOCKER_IMAGE_NAME
     ;;
 esac
+
